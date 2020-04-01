@@ -1,0 +1,4 @@
+#!/bin/bash
+
+docker-compose run -e HANAMI_ENV=test web bundle exec hanami db prepare && bundle exec rspec
+docker-compose down
