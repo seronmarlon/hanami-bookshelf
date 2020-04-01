@@ -1,0 +1,15 @@
+name: Staging
+
+on:
+  pull_request:
+    branches:
+      - staging
+env:
+  HANAMI_ENV: test
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run:  docker-compose run web bundle exec hanami db prepare && bundle exec rspec
