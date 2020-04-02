@@ -2,6 +2,7 @@ version: "3"
 
 services:
   web:
+    image: web-bookshelf
     build: .
     ports:
       - "3000:3000"

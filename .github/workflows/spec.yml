@@ -1,0 +1,37 @@
+name: spec
+
+on:
+  push:
+env:
+  IMAGE-NAME: web-bookshelf
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/cache@v1
+        id: cache-images
+        with:
+          path: docker-cache
+          key: ${{ runner.os }}-build-${{ env.IMAGE-NAME }}-${{ github.ref }}
+      - name: Load cached Docker layers
+        run: |
+          if [ -f docker-cache/${{ env.IMAGE-NAME }}.tar ]; then
+            docker load < docker-cache/${{ env.IMAGE-NAME }}.tar
+          fi
+
+      - name: build image
+        run:  docker-compose build
+
+      - name: setup spec
+        run:  docker-compose run -e HANAMI_ENV=test web bundle exec hanami db prepare
+
+      - name: run specs
+        run:  docker-compose run -e HANAMI_ENV=test web bundle exec rspec
+
+      - name: Cache image
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p docker-cache
+          docker save ${{ env.IMAGE-NAME }} $(docker history -q ${{ env.IMAGE-NAME }} | awk '!/<missing>/{print}') > docker-cache/${{ env.IMAGE-NAME }}.tar
